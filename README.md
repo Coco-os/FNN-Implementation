@@ -190,12 +190,23 @@ This allows flexible neuron-level architectures while maintaining a layer abstra
 
 # Create input neurons
 
-input1 = Neuron("I1", activation_function=lambda x: x, weights=[])
-input2 = Neuron("I2", activation_function=lambda x: x, weights=[])
+input1 = Neuron(
+    "I1",
+    activation_function=lambda x: x,
+    weights=[])
+input2 = Neuron(
+    "I2",
+    activation_function=lambda x: 2x,
+    weights=[])
 
 # Create hidden neurons
 
-hidden1 = Neuron("H1", activation_function=lambda x: 1/(1+np.exp(-x)), inputs=[input1, input2], weights=[0.5, -0.3], bias=0.1)
+hidden1 = Neuron(
+    "H1",
+    activation_function=lambda x: 1/(1+np.exp(-x)),
+    inputs=[input1, input2],
+    weights=[0.5, -0.3],
+    bias=0.1)
 hidden2 = Neuron(
     "H2",
     activation_function=lambda x: np.tanh(x),
