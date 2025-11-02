@@ -219,7 +219,10 @@ hidden2 = Neuron(
 )
 # Create complex layer
 
-complex_layer = ComplexLayer("HL1", neurons=[hidden1, hidden2])
+complex_layer = ComplexLayer(
+    "HL1",
+    neurons=[hidden1, hidden2]
+    )
 
 # Forward pass
 
