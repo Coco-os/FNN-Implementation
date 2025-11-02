@@ -53,6 +53,7 @@ Each neuron performs a weighted sum of its inputs, adds a bias term, applies an 
 
 ### Example
 
+```python
 import math
 from neuron import Neuron
 
@@ -78,6 +79,7 @@ print(output)
 # Layer and ComplexLayer Implementation
 
 Implementation of fully connected layers for a feedforward neural network using both **matrix-based** and **neuron-based** approaches.
+```
 
 ---
 
@@ -122,6 +124,7 @@ It performs a linear transformation (weighted sum + bias) on its inputs and appl
 
 ### Example
 
+```python
 import numpy as np
 
 # Activation function
@@ -141,6 +144,7 @@ layer = Layer("L1", weights=weights, bias=bias, activation_function=relu)
 
 output = layer.forward([1.0, 2.0])
 print(output)
+```
 
 ---
 
@@ -180,6 +184,7 @@ This allows flexible neuron-level architectures while maintaining a layer abstra
 
 ### Example
 
+```python
 # Assume Neuron class is already imported
 
 # Create input neurons
@@ -200,3 +205,4 @@ complex_layer = ComplexLayer("HL1", neurons=[hidden1, hidden2])
 
 output = complex_layer.forward([1.0, 2.0])
 print(output)
+```
