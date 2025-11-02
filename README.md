@@ -196,8 +196,13 @@ input2 = Neuron("I2", activation_function=lambda x: x, weights=[])
 # Create hidden neurons
 
 hidden1 = Neuron("H1", activation_function=lambda x: 1/(1+np.exp(-x)), inputs=[input1, input2], weights=[0.5, -0.3], bias=0.1)
-hidden2 = Neuron("H2", activation_function=lambda x: 1/(1+np.exp(-x)), inputs=[input1, input2], weights=[-0.2, 0.8], bias=-0.2)
-
+hidden2 = Neuron(
+    "H2",
+    activation_function=lambda x: np.tanh(x),
+    inputs=[input1, input2],
+    weights=[-0.8, 0.7],
+    bias=-0.2
+)
 # Create complex layer
 
 complex_layer = ComplexLayer("HL1", neurons=[hidden1, hidden2])
