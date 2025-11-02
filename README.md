@@ -78,8 +78,9 @@ print(output)
 
 # Layer and ComplexLayer Implementation
 
-Implementation of fully connected layers for a feedforward neural network using both **matrix-based** and **neuron-based** approaches.
 ```
+
+# Implementation of fully connected layers for a feedforward neural network using both **matrix-based** and **neuron-based** approaches.
 
 ---
 
