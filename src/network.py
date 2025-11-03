@@ -1,6 +1,4 @@
-import numpy as np
 from typing import Callable, Optional
-from numpy.typing import NDArray
 
 
 class Neuron:
