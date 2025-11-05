@@ -1,4 +1,7 @@
+from re import L
 from typing import Callable, Optional
+
+from layers import ComplexLayer, Layer
 
 
 class Neuron:
@@ -48,3 +51,14 @@ class Neuron:
 
     def __repr__(self):
         return f"Neuron({self.neuron_id})"
+
+
+class FeedforwardNetwork:
+    def __init__(self, layers: list[ComplexLayer] | list[Layer]):
+        self.layers = layers
+
+    def forward(self, input_values: list[float]) -> list[float]:
+        current_values = input_values
+        for layer in self.layers:
+            current_values = layer.forward(current_values)
+        return current_values

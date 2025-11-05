@@ -38,6 +38,7 @@ class Optimizer(abc.ABC):
         self,
         layer: Layer | ComplexLayer,
         gradients: np.ndarray | list[np.ndarray],
+        grad_bias: np.ndarray | list[np.ndarray],
         learning_rate: float,
     ) -> None:
         pass
@@ -56,12 +57,15 @@ class AdamOptimizer(Optimizer):
         self.epsilon = epsilon
         self.m: Dict[int, np.ndarray | list[np.ndarray]] = {}
         self.v: Dict[int, np.ndarray | list[np.ndarray]] = {}
+        self.mb: Dict[int, list[np.ndarray]] = {}
+        self.vb: Dict[int, list[np.ndarray]] = {}
         self.t: Dict[int, int] = {}
 
     def update(
         self,
         layer: Layer | ComplexLayer,
         gradients: np.ndarray | list[np.ndarray],
+        grad_bias: np.ndarray | list[np.ndarray],
         learning_rate: float,
     ) -> None:
         layer_id = id(layer)
@@ -76,6 +80,13 @@ class AdamOptimizer(Optimizer):
                 self.v[layer_id] = [
                     np.zeros_like(neuron.weights) for neuron in layer.neurons
                 ]
+                self.mb[layer_id] = [
+                    np.zeros_like(neuron.bias) for neuron in layer.neurons
+                ]
+                self.vb[layer_id] = [
+                    np.zeros_like(neuron.bias) for neuron in layer.neurons
+                ]
+
             self.t[layer_id] = 0
 
         self.t[layer_id] += 1
@@ -83,14 +94,22 @@ class AdamOptimizer(Optimizer):
 
         if isinstance(layer, Layer):
             g = gradients
+            grad_bias = grad_bias
             m = self.m[layer_id]
             v = self.v[layer_id]
+            mb = self.mb[layer_id]
+            vb = self.vb[layer_id]
 
             m[:] = self.beta1 * m + (1 - self.beta1) * g
             v[:] = self.beta2 * v + (1 - self.beta2) * (g**2)
+            mb[:] = self.beta1 * mb + (1 - self.beta1) * grad_bias
+            vb[:] = self.beta2 * vb + (1 - self.beta2) * (grad_bias**2)
 
             m_hat = m / (1 - self.beta1**t)
             v_hat = v / (1 - self.beta2**t)
+            mb_hat = mb / (1 - self.beta1**t)
+            vb_hat = vb / (1 - self.beta2**t)
+            layer.b -= learning_rate * mb_hat / (np.sqrt(vb_hat) + self.epsilon)
 
             layer.W -= learning_rate * m_hat / (np.sqrt(v_hat) + self.epsilon)
         else:
@@ -101,9 +120,22 @@ class AdamOptimizer(Optimizer):
 
                 m[:] = self.beta1 * m + (1 - self.beta1) * g
                 v[:] = self.beta2 * v + (1 - self.beta2) * (g**2)
+                self.mb[layer_id][i] = (
+                    self.beta1 * self.mb[layer_id][i]
+                    + (1 - self.beta1) * grad_bias[i]
+                )
+                self.vb[layer_id][i] = (
+                    self.beta2 * self.vb[layer_id][i]
+                    + (1 - self.beta2) * grad_bias[i] ** 2
+                )
 
                 m_hat = m / (1 - self.beta1**t)
                 v_hat = v / (1 - self.beta2**t)
                 neuron.weights = neuron.weights - learning_rate * m_hat / (
                     np.sqrt(v_hat) + self.epsilon
+                )
+                neuron.bias -= (
+                    learning_rate
+                    * self.mb[layer_id][i]
+                    / (np.sqrt(self.vb[layer_id][i]) + self.epsilon)
                 )
