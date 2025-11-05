@@ -1,12 +1,13 @@
+from typing import Iterator, Tuple
 import numpy as np
-from typing import Tuple, Iterator, Any
-from numpy.typing import NDArray
 
 
-def create_mini_batches(
-    X: NDArray[Any], y: NDArray[Any], batch_size: int, shuffle: bool = True
-) -> Iterator[Tuple[NDArray[Any], NDArray[Any]]]:
-    num_samples = X.shape[0]
+def create_mini_batches(X: np.ndarray, y: np.ndarray, batch_size: int, shuffle: bool = True):
+    """
+    X: shape (n_features, n_samples)
+    y: shape (n_samples,)  <- class labels
+    """
+    num_samples = X.shape[1]  # samples are in axis 1
     indices = np.arange(num_samples)
 
     if shuffle:
@@ -15,7 +16,8 @@ def create_mini_batches(
     for start_idx in range(0, num_samples, batch_size):
         end_idx = min(start_idx + batch_size, num_samples)
         batch_indices = indices[start_idx:end_idx]
-        yield X[batch_indices], y[batch_indices]
+        yield X[:, batch_indices], y[batch_indices]
+
 
 
 def train_val_test_split(

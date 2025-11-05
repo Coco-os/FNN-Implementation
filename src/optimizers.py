@@ -1,141 +1,118 @@
 import numpy as np
-from typing import Type, Dict, Any
-import abc
-from layers import Layer, ComplexLayer
-
-OPTIMIZERS: Dict[str, Type[abc.ABC]] = {}
+from abc import ABC, abstractmethod
 
 
-def register_optimizer(name: str):
-    """Decorator to register optimizer classes with a given name."""
+class Optimizer(ABC):
+    """Base class for all optimizers."""
 
-    def decorator(cls: Type[abc.ABC]) -> Type[abc.ABC]:
-        OPTIMIZERS[name.lower()] = cls
-        return cls
+    def __init__(self, learning_rate: float = 0.001):
+        self.learning_rate = learning_rate
 
-    return decorator
-
-
-def optimizer(name: str) -> Type[abc.ABC]:
-    """Factory function to get an optimizer class (or instance) by name."""
-    cls = OPTIMIZERS.get(name.lower())
-    if cls is None:
-        raise ValueError(
-            f"Optimizer '{name}' not found. Registered: {list(OPTIMIZERS.keys())}"
-        )
-    return cls
-
-
-def create_optimizer(name: str, **kwargs: Dict[str, Any]) -> abc.ABC:
-    """Factory function to create an optimizer instance by name."""
-    cls = optimizer(name)
-    return cls(**kwargs)
-
-
-class Optimizer(abc.ABC):
-    @abc.abstractmethod
-    def update(
-        self,
-        layer: Layer | ComplexLayer,
-        gradients: np.ndarray | list[np.ndarray],
-        grad_bias: np.ndarray | list[np.ndarray],
-        learning_rate: float,
-    ) -> None:
+    @abstractmethod
+    def update(self, layer, dW, db):
+        """Update weights and biases for a given layer."""
         pass
 
 
-@register_optimizer("adam")
-class AdamOptimizer(Optimizer):
+class Adam(Optimizer):
+    """Adam optimizer (Adaptive Moment Estimation)."""
+
     def __init__(
         self,
+        learning_rate: float = 0.001,
         beta1: float = 0.9,
         beta2: float = 0.999,
         epsilon: float = 1e-8,
     ):
+        super().__init__(learning_rate)
         self.beta1 = beta1
         self.beta2 = beta2
         self.epsilon = epsilon
-        self.m: Dict[int, np.ndarray | list[np.ndarray]] = {}
-        self.v: Dict[int, np.ndarray | list[np.ndarray]] = {}
-        self.mb: Dict[int, list[np.ndarray]] = {}
-        self.vb: Dict[int, list[np.ndarray]] = {}
-        self.t: Dict[int, int] = {}
 
-    def update(
-        self,
-        layer: Layer | ComplexLayer,
-        gradients: np.ndarray | list[np.ndarray],
-        grad_bias: np.ndarray | list[np.ndarray],
-        learning_rate: float,
-    ) -> None:
+        self.m_W = {}
+        self.v_W = {}
+        self.m_b = {}
+        self.v_b = {}
+        self.t = {}
+
+    def update(self, layer, dW, db):
         layer_id = id(layer)
-        if layer_id not in self.m:
-            if isinstance(layer, Layer):
-                self.m[layer_id] = np.zeros_like(layer.W)
-                self.v[layer_id] = np.zeros_like(layer.W)
-            else:
-                self.m[layer_id] = [
-                    np.zeros_like(neuron.weights) for neuron in layer.neurons
-                ]
-                self.v[layer_id] = [
-                    np.zeros_like(neuron.weights) for neuron in layer.neurons
-                ]
-                self.mb[layer_id] = [
-                    np.zeros_like(neuron.bias) for neuron in layer.neurons
-                ]
-                self.vb[layer_id] = [
-                    np.zeros_like(neuron.bias) for neuron in layer.neurons
-                ]
 
+        # Initialize moment estimates
+        if layer_id not in self.m_W:
+            self.m_W[layer_id] = np.zeros_like(dW)
+            self.v_W[layer_id] = np.zeros_like(dW)
+            self.m_b[layer_id] = np.zeros_like(db)
+            self.v_b[layer_id] = np.zeros_like(db)
             self.t[layer_id] = 0
 
         self.t[layer_id] += 1
         t = self.t[layer_id]
 
-        if isinstance(layer, Layer):
-            g = gradients
-            grad_bias = grad_bias
-            m = self.m[layer_id]
-            v = self.v[layer_id]
-            mb = self.mb[layer_id]
-            vb = self.vb[layer_id]
+        # Update biased first and second moment estimates
+        self.m_W[layer_id] = self.beta1 * self.m_W[layer_id] + (1 - self.beta1) * dW
+        self.v_W[layer_id] = self.beta2 * self.v_W[layer_id] + (1 - self.beta2) * (dW ** 2)
+        self.m_b[layer_id] = self.beta1 * self.m_b[layer_id] + (1 - self.beta1) * db
+        self.v_b[layer_id] = self.beta2 * self.v_b[layer_id] + (1 - self.beta2) * (db ** 2)
 
-            m[:] = self.beta1 * m + (1 - self.beta1) * g
-            v[:] = self.beta2 * v + (1 - self.beta2) * (g**2)
-            mb[:] = self.beta1 * mb + (1 - self.beta1) * grad_bias
-            vb[:] = self.beta2 * vb + (1 - self.beta2) * (grad_bias**2)
+        # Bias correction
+        m_W_hat = self.m_W[layer_id] / (1 - self.beta1 ** t)
+        v_W_hat = self.v_W[layer_id] / (1 - self.beta2 ** t)
+        m_b_hat = self.m_b[layer_id] / (1 - self.beta1 ** t)
+        v_b_hat = self.v_b[layer_id] / (1 - self.beta2 ** t)
 
-            m_hat = m / (1 - self.beta1**t)
-            v_hat = v / (1 - self.beta2**t)
-            mb_hat = mb / (1 - self.beta1**t)
-            vb_hat = vb / (1 - self.beta2**t)
-            layer.b -= learning_rate * mb_hat / (np.sqrt(vb_hat) + self.epsilon)
+        # Parameter updates
+        layer.W -= self.learning_rate * m_W_hat / (np.sqrt(v_W_hat) + self.epsilon)
+        layer.b -= self.learning_rate * m_b_hat / (np.sqrt(v_b_hat) + self.epsilon)
 
-            layer.W -= learning_rate * m_hat / (np.sqrt(v_hat) + self.epsilon)
-        else:
-            for i, neuron in enumerate(layer.neurons):
-                g = gradients[i]
-                m = self.m[layer_id][i]
-                v = self.v[layer_id][i]
 
-                m[:] = self.beta1 * m + (1 - self.beta1) * g
-                v[:] = self.beta2 * v + (1 - self.beta2) * (g**2)
-                self.mb[layer_id][i] = (
-                    self.beta1 * self.mb[layer_id][i]
-                    + (1 - self.beta1) * grad_bias[i]
-                )
-                self.vb[layer_id][i] = (
-                    self.beta2 * self.vb[layer_id][i]
-                    + (1 - self.beta2) * grad_bias[i] ** 2
-                )
+class SGD_Momentum(Optimizer):
+    """Stochastic Gradient Descent with Momentum."""
 
-                m_hat = m / (1 - self.beta1**t)
-                v_hat = v / (1 - self.beta2**t)
-                neuron.weights = neuron.weights - learning_rate * m_hat / (
-                    np.sqrt(v_hat) + self.epsilon
-                )
-                neuron.bias -= (
-                    learning_rate
-                    * self.mb[layer_id][i]
-                    / (np.sqrt(self.vb[layer_id][i]) + self.epsilon)
-                )
+    def __init__(self, learning_rate: float = 0.01, momentum: float = 0.9):
+        super().__init__(learning_rate)
+        self.momentum = momentum
+        self.v_W = {}
+        self.v_b = {}
+
+    def update(self, layer, dW, db):
+        layer_id = id(layer)
+
+        if layer_id not in self.v_W:
+            self.v_W[layer_id] = np.zeros_like(dW)
+            self.v_b[layer_id] = np.zeros_like(db)
+
+        # Momentum update
+        self.v_W[layer_id] = self.momentum * self.v_W[layer_id] - self.learning_rate * dW
+        self.v_b[layer_id] = self.momentum * self.v_b[layer_id] - self.learning_rate * db
+
+        # Update parameters
+        layer.W += self.v_W[layer_id]
+        layer.b += self.v_b[layer_id]
+
+
+class RMSProp(Optimizer):
+    """RMSProp optimizer."""
+
+    def __init__(self, learning_rate: float = 0.001, beta: float = 0.9, epsilon: float = 1e-8):
+        super().__init__(learning_rate)
+        self.beta = beta
+        self.epsilon = epsilon
+        self.s_W = {}
+        self.s_b = {}
+
+    def update(self, layer, dW, db):
+        layer_id = id(layer)
+
+        if layer_id not in self.s_W:
+            self.s_W[layer_id] = np.zeros_like(dW)
+            self.s_b[layer_id] = np.zeros_like(db)
+
+        # Compute moving average of squared gradients
+        self.s_W[layer_id] = self.beta * self.s_W[layer_id] + (1 - self.beta) * (dW ** 2)
+        self.s_b[layer_id] = self.beta * self.s_b[layer_id] + (1 - self.beta) * (db ** 2)
+
+        # Update parameters
+        layer.W -= self.learning_rate * dW / (np.sqrt(self.s_W[layer_id]) + self.epsilon)
+        layer.b -= self.learning_rate * db / (np.sqrt(self.s_b[layer_id]) + self.epsilon)
+

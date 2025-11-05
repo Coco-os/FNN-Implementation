@@ -1,128 +1,119 @@
+import matplotlib.pyplot as plt
+from src.layer import Layer
 import numpy as np
-from typing import Callable, Optional, List
-from numpy.typing import NDArray
+from utils import create_mini_batches
 
-
-class Neuron:
+class NeuralNetwork:
     def __init__(
-        self,
-        neuron_id: str,
-        activation_function: Callable[[float], float],
-        weights: Optional[List[float]] = None,
-        inputs: Optional[List["Neuron"]] = None,
-        bias: float = 0.0,
+            self,
+            input_size: int,
+            layers_num_neurons: list[int],
+            layers_activation_functions: list,
+            layers_initializers,
+            optimizer,
+            loss_function
     ):
-        self.neuron_id = neuron_id
-        self.activation_function = activation_function
-        self.weights = (
-            np.array(weights, dtype=np.float64) if weights else np.array([])
-        )
-        self.inputs = inputs if inputs else []
-        self.outputs: List["Neuron"] = []
-        self.bias = bias
+        if len(layers_num_neurons) != len(layers_activation_functions):
+            raise ValueError("layers_config and activations must have the same length")
 
-        for n in self.inputs:
-            n.add_output(self)
+        if not isinstance(layers_initializers, list):
+            initializers = [layers_initializers] * len(layers_num_neurons)
+        else:
+            if len(layers_initializers) != len(layers_num_neurons):
+                raise ValueError("If passing a list of initializers, it must match layers_config length")
+            initializers = layers_initializers
 
-    def add_input(self, neuron: "Neuron"):
-        self.inputs.append(neuron)
+        self.layers = []
+        self.optimizer = optimizer
+        self.loss_function = loss_function
+        prev_size = input_size
 
-    def add_output(self, neuron: "Neuron"):
-        self.outputs.append(neuron)
+        for neurons, act_instance, init in zip(layers_num_neurons, layers_activation_functions, initializers):
+            self.layers.append(Layer(
+                input_size=prev_size,
+                output_size=neurons,
+                activation_function=act_instance,
+                initializer=init
+            ))
+            prev_size = neurons
 
-    def forward(self, input_values: Optional[List[float]] = None) -> float:
-        if self.inputs:
-            input_values = np.array(
-                [n.output_value for n in self.inputs], dtype=np.float64
-            )
-        elif input_values is None:
-            raise ValueError("Input neuron requires explicit input_values.")
+        # Store losses for plotting
+        self.loss_history = []
 
-        self.input_values = np.array(input_values, dtype=np.float64)
-        z = np.dot(self.weights, self.input_values) + self.bias
-        self.output_value = self.activation_function(z)
-        return self.output_value
+    def __repr__(self) -> str:
+        init_name = self.loss_function.__name__ if callable(self.loss_function) else str(self.loss_function)
+        desc = "NeuralNetwork(\n"
+        for i, layer in enumerate(self.layers):
+            desc += f"  Layer {i + 1}: {repr(layer)}\n"
+        desc += f"  Optimizer: {self.optimizer.__class__.__name__}\n"
+        desc += f"  Loss Function: {init_name}\n"
+        desc += ")"
+        return desc
 
-    def backward(self, gradient: float) -> np.ndarray:
-        """Returns gradient w.r.t inputs (delta for previous layer)"""
-        self.grad_weights = gradient * self.input_values
-        self.grad_bias = gradient
-        delta_prev = self.weights * gradient
-        return delta_prev
-
-    def __repr__(self):
-        return f"Neuron({self.neuron_id})"
-
-
-class ComplexLayer:
-    def __init__(self, layer_id: str, neurons: List[Neuron]):
-        self.layer_id = layer_id
-        self.neurons = neurons
-
-    def forward(self, input_values: Optional[List[float]] = None) -> np.ndarray:
-        outputs = []
-        for neuron in self.neurons:
-            if input_values is not None:
-                out = neuron.forward(input_values)
-            else:
-                out = neuron.forward()
-            outputs.append(out)
-        return np.array(outputs)
-
-    def backward(self, delta_out: np.ndarray) -> np.ndarray:
-        delta_prev_total = np.zeros(len(self.neurons[0].input_values))
-        for neuron, delta in zip(self.neurons, delta_out):
-            delta_prev_total += neuron.backward(delta)
-        return delta_prev_total
-
-    def __repr__(self):
-        return f"Layer({self.layer_id}, Neurons: {len(self.neurons)})"
-
-
-class Layer:
-    def __init__(
-        self,
-        layer_id: str,
-        weights: NDArray[np.float64],
-        bias: NDArray[np.float64],
-        activation_function: Callable[
-            [NDArray[np.float64]], NDArray[np.float64]
-        ],
-    ):
-        self.layer_id = layer_id
-        self.W = weights
-        self.b = bias
-        self.activation = activation_function
-
-    def forward(self, input_values: np.ndarray) -> np.ndarray:
-        self.input = np.array(input_values, dtype=np.float64)
-        self.output = self.activation(np.dot(self.W, self.input) + self.b)
-        return self.output
-
-    def backward(self, delta_out: np.ndarray) -> np.ndarray:
-        self.grad_W = np.outer(delta_out, self.input)
-        self.grad_b = delta_out
-        delta_prev = np.dot(self.W.T, delta_out)
-        return delta_prev
-
-    def __repr__(self):
-        return f"Layer({self.layer_id}, Weights shape: {self.W.shape})"
-
-
-class FeedforwardNetwork:
-    def __init__(self, layers: List[ComplexLayer] | List[Layer]):
-        self.layers = layers
-
-    def forward(self, input_values: np.ndarray) -> np.ndarray:
-        current_values = np.array(input_values, dtype=np.float64)
+    def forward(self, X: np.ndarray) -> np.ndarray:
+        output = X
         for layer in self.layers:
-            current_values = layer.forward(current_values)
-        return current_values
+            output = layer.forward(output)
+        return output
 
-    def backward(self, grad_output: np.ndarray) -> None:
-        delta = grad_output
+    def backward(self, y_true: np.ndarray, y_pred: np.ndarray):
+        """
+        Backpropagation using the derivative of the loss function.
+        """
+        # Compute gradient of loss w.r.t output
+        dA = self.loss_function.derivative(y_true, y_pred)
+
+        # Backpropagate through layers in reverse
         for layer in reversed(self.layers):
-            delta = layer.backward(delta)
+            dA = layer.backward(dA)
+            self.optimizer.update(layer, layer.dW, layer.db)
 
-    def __repr__(self):
-        return f"FeedforwardNetwork(Layers: {len(self.layers)})"
+    def train(self, X_train: np.ndarray, y_train: np.ndarray, epochs: int, batch_size: int):
+        """
+        Train the network using mini-batches and the specified loss function.
+        """
+        try:
+            self.loss_history = []
+
+            for epoch in range(epochs):
+                total_loss = 0.0
+                batches = list(create_mini_batches(X_train, y_train, batch_size=batch_size))
+                for X_batch, y_batch in batches:
+                    y_pred = self.forward(X_batch)
+                    # Compute loss using the loss function
+                    loss = self.loss_function.forward(y_batch, y_pred)
+                    total_loss += loss
+
+                    # Backpropagation
+                    self.backward(y_batch, y_pred)
+
+                avg_loss = total_loss / len(batches)
+                self.loss_history.append(avg_loss)
+
+                print(f"Epoch {epoch + 1}/{epochs} - Loss: {avg_loss:.4f}")
+        except Exception as e:
+            print(f"[ERROR] {e}")
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        y_pred = self.forward(X)
+        return np.argmax(y_pred, axis=0)
+
+    def evaluate(self, X: np.ndarray, y_true: np.ndarray) -> float:
+        y_pred = self.predict(X)
+        accuracy = np.mean(y_pred == np.argmax(y_true, axis=0))
+        print(f"Accuracy: {accuracy * 100:.2f}%")
+        return float(accuracy)
+
+    def plot_losses(self):
+        """Plot training loss per epoch."""
+        if not self.loss_history:
+            print("[INFO] No loss history found. Train the model first.")
+            return
+
+        plt.figure(figsize=(8, 5))
+        plt.plot(range(1, len(self.loss_history) + 1), self.loss_history, marker='o')
+        plt.title("Training Loss Over Epochs")
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss (MSE)")
+        plt.grid(True)
+        plt.show()
