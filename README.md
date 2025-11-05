@@ -1,19 +1,34 @@
-# FNN Implementation
+# 🧠 Feedforward Neural Network (FNN)
 
-Implementation of a simple Feedforward Neural Network (FNN) using a modular `Neuron` class.
+Implementation of a modular **Feedforward Neural Network (FNN)** built from individual neurons, supporting both **matrix-based** and **neuron-based** layers.  
+Includes full forward propagation, partial backpropagation support, optimizers, and dataset utilities.
+
+---
+
+## Overview
+
+This project demonstrates a **from-scratch** neural network built using object-oriented Python, emphasizing:
+
+- Modular design (`Neuron`, `Layer`, `ComplexLayer`, `FeedforwardNetwork`)
+- Extendable backpropagation logic
+- Optimizer support (Adam)
+- Mini-batch training
+- Dataset management and splitting
 
 ---
 
 ## Classes
 
+---
+
 ### Neuron
 
-The `Neuron` class serves as the fundamental building block of the feedforward neural network.  
-Each neuron performs a weighted sum of its inputs, adds a bias term, applies an activation function, and produces an output value.
+The `Neuron` class represents the fundamental processing unit of the network.  
+Each neuron computes a weighted sum of its inputs, adds a bias, applies an activation function, and produces an output value.
 
 ---
 
-### Initialization Parameters
+#### **Initialization Parameters**
 
 | Parameter             | Type                       | Description                                                                    |
 | --------------------- | -------------------------- | ------------------------------------------------------------------------------ |
@@ -25,7 +40,7 @@ Each neuron performs a weighted sum of its inputs, adds a bias term, applies an 
 
 ---
 
-### Attributes
+#### **Attributes**
 
 | Attribute             | Description                                                 |
 | --------------------- | ----------------------------------------------------------- |
@@ -38,62 +53,57 @@ Each neuron performs a weighted sum of its inputs, adds a bias term, applies an 
 
 ---
 
-### Methods
+#### **Methods**
 
 | Method                        | Description                                                                                              |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `add_input(neuron)`           | Adds an input neuron after initialization, enabling flexible network architecture.                       |
-| `add_output(neuron)`          | Adds a downstream connection from this neuron to another neuron.                                         |
-| `update_weights(new_weights)` | Updates the neuron’s weights. The new list length must match the number of inputs.                       |
-| `update_bias(new_bias)`       | Updates the bias term.                                                                                   |
+| `add_input(neuron)`           | Adds an input neuron after initialization.                                                               |
+| `add_output(neuron)`          | Adds a downstream connection to another neuron.                                                          |
+| `update_weights(new_weights)` | Updates the neuron’s weights (must match input length).                                                  |
+| `update_bias(new_bias)`       | Updates the neuron’s bias.                                                                               |
 | `forward(input_values=None)`  | Computes the neuron’s output by applying the activation function to the weighted sum of inputs and bias. |
-| `__repr__()`                  | Returns a string representation of the neuron (its ID).                                                  |
+| `backward(gradient)`          | Computes partial gradients of weights and bias during backpropagation.                                   |
+| `__repr__()`                  | Returns a readable string representation of the neuron.                                                  |
 
 ---
 
-### Example
+#### **Example**
 
 ```python
-import math
-from neuron import Neuron
+    import math
+    from neuron import Neuron
 
-# Define an activation function
+    sigmoid = lambda x: 1 / (1 + math.exp(-x))
 
-sigmoid = lambda x: 1 / (1 + math.exp(-x))
+    input_neuron = Neuron("I1", activation_function=lambda x: x, weights=[])
+    hidden_neuron = Neuron("H1", activation_function=sigmoid, inputs=[input_neuron], weights=[0.8], bias=0.2)
 
-# Create an input neuron (no upstream neurons)
+    input_neuron.forward([1.0])
+    output = hidden_neuron.forward()
 
-input_neuron = Neuron("I1", activation_function=lambda x: x, weights=[])
-
-# Create a hidden neuron connected to the input neuron
-
-hidden_neuron = Neuron("H1", activation_function=sigmoid, inputs=[input_neuron], weights=[0.8], bias=0.2)
-
-# Forward pass
-
-input_neuron.forward([1.0])
-output = hidden_neuron.forward()
-
-print(output)
-
-# Layer and ComplexLayer Implementation
+    print(output)
 
 ```
 
-# Implementation of fully connected layers for a feedforward neural network using both **matrix-based** and **neuron-based** approaches.
-
 ---
 
-## Classes
+## Layer and ComplexLayer
+
+Implementation of fully connected layers for a feedforward neural network using both **matrix-based** (`Layer`) and **neuron-based** (`ComplexLayer`) approaches.
+
+---
 
 ### Layer
 
-The `Layer` class represents a traditional fully connected neural network layer.
-It performs a linear transformation (weighted sum + bias) on its inputs and applies an activation function to produce outputs.
+The `Layer` class represents a fully connected neural layer that performs:
+
+    z = W x + b
+
+followed by an activation function.
 
 ---
 
-### Initialization Parameters
+#### **Initialization Parameters**
 
 | Parameter             | Type                                                   | Description                                        |
 | --------------------- | ------------------------------------------------------ | -------------------------------------------------- |
@@ -104,7 +114,7 @@ It performs a linear transformation (weighted sum + bias) on its inputs and appl
 
 ---
 
-### Attributes
+#### **Attributes**
 
 | Attribute    | Description                                            |
 | ------------ | ------------------------------------------------------ |
@@ -115,48 +125,39 @@ It performs a linear transformation (weighted sum + bias) on its inputs and appl
 
 ---
 
-### Methods
+#### **Methods**
 
 | Method                  | Description                                                                       |
 | ----------------------- | --------------------------------------------------------------------------------- |
 | `forward(input_values)` | Computes the layer’s output by applying `activation(Wx + b)` to the input vector. |
+| `backward(delta_out)`   | Performs the backward pass and computes gradients for weights and biases.         |
 
 ---
 
-### Example
+#### **Example**
 
 ```python
-import numpy as np
+    import numpy as np
 
-# Activation function
+    relu = lambda x: np.maximum(0, x)
 
-relu = lambda x: np.maximum(0, x)
+    weights = np.array([[0.5, -0.2], [0.3, 0.8]])
+    bias = np.array([0.1, -0.1])
 
-# Define weights and biases
-
-weights = np.array([[0.5, -0.2], [0.3, 0.8]])
-bias = np.array([0.1, -0.1])
-
-# Create a layer
-
-layer = Layer("L1", weights=weights, bias=bias, activation_function=relu)
-
-# Forward pass
-
-output = layer.forward([1.0, 2.0])
-print(output)
+    layer = Layer("L1", weights=weights, bias=bias, activation_function=relu)
+    output = layer.forward([1.0, 2.0])
+    print(output)
 ```
 
 ---
 
 ### ComplexLayer
 
-The `ComplexLayer` class represents a layer composed of individual `Neuron` instances.
-This allows flexible neuron-level architectures while maintaining a layer abstraction.
+The `ComplexLayer` class represents a layer composed of individual `Neuron` instances, offering a more granular neuron-based design.
 
 ---
 
-### Initialization Parameters
+#### **Initialization Parameters**
 
 | Parameter  | Type           | Description                              |
 | ---------- | -------------- | ---------------------------------------- |
@@ -165,67 +166,99 @@ This allows flexible neuron-level architectures while maintaining a layer abstra
 
 ---
 
-### Attributes
+#### **Methods**
 
-| Attribute  | Description                            |
-| ---------- | -------------------------------------- |
-| `layer_id` | Layer identifier                       |
-| `neurons`  | List of `Neuron` objects in this layer |
+| Method                  | Description                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------- |
+| `forward(input_values)` | Computes the output of all neurons in the layer.                                    |
+| `backward(delta_out)`   | Performs backward propagation through all neurons and returns cumulative gradients. |
+
+---
+
+#### **Example**
+
+```python
+    import numpy as np
+    from neuron import Neuron
+    from layers import ComplexLayer
+
+    input1 = Neuron("I1", activation_function=lambda x: x, weights=[])
+    input2 = Neuron("I2", activation_function=lambda x: x, weights=[])
+
+    hidden1 = Neuron("H1", activation_function=lambda x: 1/(1+np.exp(-x)), inputs=[input1, input2], weights=[0.5, -0.3], bias=0.1)
+    hidden2 = Neuron("H2", activation_function=lambda x: np.tanh(x), inputs=[input1, input2], weights=[-0.8, 0.7], bias=-0.2)
+
+    complex_layer = ComplexLayer("HL1", neurons=[hidden1, hidden2])
+    output = complex_layer.forward([1.0, 2.0])
+    print(output)
+```
 
 ---
 
-### Methods
+## FeedforwardNetwork
 
-| Method                  | Description                                                                                  |
-| ----------------------- | -------------------------------------------------------------------------------------------- |
-| `forward(input_values)` | Computes the output of all neurons in the layer, optionally using the provided input vector. |
-| `__repr__()`            | Returns a string representation of the layer, including its ID and number of neurons.        |
+The `FeedforwardNetwork` class manages sequential layer execution for both forward and backward passes.
+
+| Method               | Description                                                        |
+| -------------------- | ------------------------------------------------------------------ |
+| `forward(inputs)`    | Propagates inputs through all layers and returns final outputs.    |
+| `backward(grad_out)` | Performs backpropagation starting from the output layer backwards. |
 
 ---
+
+#### **Example**
+
+```python
+    from network import FeedforwardNetwork
+    from layers import Layer
+    import numpy as np
+
+    relu = lambda x: np.maximum(0, x)
+
+    layer1 = Layer("L1", np.random.randn(4, 3), np.zeros(4), relu)
+    layer2 = Layer("L2", np.random.randn(2, 4), np.zeros(2), relu)
+
+    net = FeedforwardNetwork([layer1, layer2])
+    output = net.forward([1.0, 0.5, -1.2])
+    print(output)
+```
+
+---
+
+## Optimizers
+
+The project includes an **Adam optimizer** implementation with adaptive learning rates and bias correction.
+
+| Parameter | Default | Description                                            |
+| --------- | ------- | ------------------------------------------------------ |
+| `beta1`   | 0.9     | Exponential decay rate for the first moment estimate.  |
+| `beta2`   | 0.999   | Exponential decay rate for the second moment estimate. |
+| `epsilon` | 1e-8    | Small constant for numerical stability.                |
 
 ### Example
 
 ```python
-# Assume Neuron class is already imported
-
-# Create input neurons
-
-input1 = Neuron(
-    "I1",
-    activation_function=lambda x: x,
-    weights=[]
-    )
-input2 = Neuron(
-    "I2",
-    activation_function=lambda x: 2x,
-    weights=[]
-    )
-
-# Create hidden neurons
-
-hidden1 = Neuron(
-    "H1",
-    activation_function=lambda x: 1/(1+np.exp(-x)),
-    inputs=[input1, input2],
-    weights=[0.5, -0.3],
-    bias=0.1
-    )
-hidden2 = Neuron(
-    "H2",
-    activation_function=lambda x: np.tanh(x),
-    inputs=[input1, input2],
-    weights=[-0.8, 0.7],
-    bias=-0.2
-)
-# Create complex layer
-
-complex_layer = ComplexLayer(
-    "HL1",
-    neurons=[hidden1, hidden2]
-    )
-
-# Forward pass
-
-output = complex_layer.forward([1.0, 2.0])
-print(output)
+    optimizer = AdamOptimizer()
+    optimizer.update(layer, gradients, grad_bias, learning_rate=0.001)
 ```
+
+---
+
+## Mini-Batch Training
+
+Supports variable-sized **mini-batches** (e.g., 32, 64, 128) for training.  
+Batches are processed sequentially, and if the dataset size is not divisible by the batch size, the final batch is handled automatically.
+
+---
+
+## Dataset Splitting
+
+Utility functions allow partitioning data into **training**, **validation**, and **test** sets with customizable ratios and random seed control.
+
+Example ratios:
+
+- 70% training
+- 15% validation
+- 15% testing
+
+Optional `random_seed` ensures reproducibility.
