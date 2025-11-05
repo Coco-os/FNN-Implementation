@@ -99,7 +99,7 @@ The `Layer` class represents a fully connected neural layer that performs:
 
 $$z = W x + b$$
 
-followed by an activation function.
+Followed by an activation function.
 
 ---
 
