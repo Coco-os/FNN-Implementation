@@ -97,7 +97,7 @@ Implementation of fully connected layers for a feedforward neural network using 
 
 The `Layer` class represents a fully connected neural layer that performs:
 
-    z = W x + b
+$$z = W x + b$$
 
 followed by an activation function.
 
