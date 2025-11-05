@@ -2,7 +2,6 @@ import numpy as np
 from typing import Type, Dict, Any
 import abc
 from layers import Layer, ComplexLayer
-from network import Neuron
 
 OPTIMIZERS: Dict[str, Type[abc.ABC]] = {}
 
