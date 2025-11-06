@@ -33,3 +33,14 @@ class Relu(Activation):
             return np.where(x > 0, 1, 0)
 
         super().__init__(relu, relu_derivative)
+
+
+class LeakyRelu(Activation):
+    def __init__(self, alpha=0.01):
+        def leaky_relu(x):
+            return np.where(x > 0, x, alpha * x)
+
+        def leaky_relu_derivative(x):
+            return np.where(x > 0, 1, alpha)
+
+        super().__init__(leaky_relu, leaky_relu_derivative)
