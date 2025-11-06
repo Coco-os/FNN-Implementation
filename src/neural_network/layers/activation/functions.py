@@ -11,3 +11,14 @@ class Sigmoid(Activation):
             return sigmoid_x * (1 - sigmoid_x)
 
         super().__init__(sigmoid, sigmoid_derivative)
+
+
+class Tanh(Activation):
+    def __init__(self):
+        def tanh(x):
+            return np.tanh(x)
+
+        def tanh_derivative(x):
+            return 1 - np.tanh(x) ** 2
+
+        super().__init__(tanh, tanh_derivative)
