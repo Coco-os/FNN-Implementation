@@ -1,5 +1,5 @@
 import numpy as np
-from .base import BaseOptimizer, Array, Shape
+from src.neural_network.optimizers.interface.base import BaseOptimizer, Array, Shape
 
 class Adagrad(BaseOptimizer):
     def __init__(self, learning_rate: float = 0.01, epsilon: float = 1e-8) -> None:

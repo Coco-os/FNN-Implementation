@@ -1,4 +1,4 @@
-from .base import BaseOptimizer, Array, Shape
+from src.neural_network.optimizers.interface.base import BaseOptimizer, Array, Shape
 
 class SGD(BaseOptimizer):
     def __init__(self, learning_rate: float = 1e-2) -> None:
