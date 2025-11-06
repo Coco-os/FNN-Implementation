@@ -1,5 +1,5 @@
 import os
-from src.utils import train_val_test_split
+from main.utils import train_val_test_split
 import numpy as np
 from sklearn.datasets import load_iris
 import sys

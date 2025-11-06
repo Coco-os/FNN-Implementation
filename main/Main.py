@@ -1,8 +1,8 @@
 from data import dataset_manager
 from optimizers import Adam
 from network import NeuralNetwork
-from src.layer import Sigmoid, WeightInitializers
-from src.losses import LossFunction
+from src.neural_network.layers.layer import Sigmoid, WeightInitializers
+from main.losses import LossFunction
 from sklearn.preprocessing import OneHotEncoder
 
 # ------------- GLOBAL VARIABLES ------------

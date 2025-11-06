@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from src.layer import Layer
+from src.neural_network.layers.layer import Layer
 import numpy as np
 from utils import create_mini_batches
 
