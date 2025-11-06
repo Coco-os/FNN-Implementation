@@ -1,6 +1,19 @@
 import numpy as np
 from .layer import Activation
 
+class Softmax(Activation):
+    def __init__(self):
+        def softmax(x):
+            exp_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
+            return exp_x / np.sum(exp_x, axis=-1, keepdims=True)
+
+        def softmax_derivative(x):
+            s = softmax(x)
+            return s * (1 - s)
+
+        super().__init__(softmax, softmax_derivative)
+
+
 class Sigmoid(Activation):
     def __init__(self):
         def sigmoid(x):
