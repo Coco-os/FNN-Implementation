@@ -22,3 +22,14 @@ class Tanh(Activation):
             return 1 - np.tanh(x) ** 2
 
         super().__init__(tanh, tanh_derivative)
+
+
+class Relu(Activation):
+    def __init__(self):
+        def relu(x):
+            return np.maximum(0, x)
+
+        def relu_derivative(x):
+            return np.where(x > 0, 1, 0)
+
+        super().__init__(relu, relu_derivative)
