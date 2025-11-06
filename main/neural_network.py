@@ -1,8 +1,8 @@
 import numpy as np
 from IPython.core.display_functions import clear_output
 
-from src.neural_network.layers.network_layer import FullyConnectedLayer
-from src.neural_network.optimizers.initialize import initialize_optimizer
+from main.neural_network.layers.network_layer import FullyConnectedLayer
+from main.neural_network.optimizers.initialize import initialize_optimizer
 
 
 def predict(network, x):

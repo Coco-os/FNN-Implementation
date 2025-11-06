@@ -1,4 +1,4 @@
-from src.neural_network.layers.network_layer import FullyConnectedLayer
+from main.neural_network.layers.network_layer import FullyConnectedLayer
 
 def initialize_optimizer(nn, optimizers):
     i = 0

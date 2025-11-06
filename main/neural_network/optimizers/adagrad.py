@@ -1,15 +1,9 @@
 import numpy as np
-from src.neural_network.optimizers.interface.base import BaseOptimizer, Array, Shape
+from main.neural_network.optimizers.interface.base import BaseOptimizer, Array, Shape
 
-class RMSProp(BaseOptimizer):
-    def __init__(
-        self,
-        learning_rate: float = 0.001,
-        gamma: float = 0.9,
-        epsilon: float = 1e-8
-    ) -> None:
+class Adagrad(BaseOptimizer):
+    def __init__(self, learning_rate: float = 0.01, epsilon: float = 1e-8) -> None:
         super().__init__(learning_rate)
-        self.gamma = float(gamma)
         self.epsilon = float(epsilon)
 
         self.s_weights: Array | None = None
@@ -33,8 +27,8 @@ class RMSProp(BaseOptimizer):
 
         assert self.s_weights is not None and self.s_bias is not None
 
-        self.s_weights = self.gamma * self.s_weights + (1 - self.gamma) * (dW ** 2)
-        self.s_bias = self.gamma * self.s_bias + (1 - self.gamma) * (dB ** 2)
+        self.s_weights += dW ** 2
+        self.s_bias += dB ** 2
 
         weights = weights - self.learning_rate * dW / (np.sqrt(self.s_weights) + self.epsilon)
         bias    = bias    - self.learning_rate * dB / (np.sqrt(self.s_bias) + self.epsilon)

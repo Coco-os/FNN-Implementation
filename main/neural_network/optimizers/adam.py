@@ -1,5 +1,5 @@
 import numpy as np
-from src.neural_network.optimizers.interface.base import BaseOptimizer, Array, Shape
+from main.neural_network.optimizers.interface.base import BaseOptimizer, Array, Shape
 
 class Adam(BaseOptimizer):
     def __init__(
