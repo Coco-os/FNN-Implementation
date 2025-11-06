@@ -5,13 +5,14 @@ from matplotlib.colors import LinearSegmentedColormap
 
 def draw_nn(nn):
     fig, ax = plt.subplots(figsize=(12, 8))
-    fig.patch.set_facecolor("#0f1117")
-    ax.set_facecolor("#0f1117")
+
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
     ax.set_aspect("equal")
     ax.axis("off")
 
-    pink_nodes = LinearSegmentedColormap.from_list("pink_nodes", ["#ffb3d9", "#ff66b3", "#d9368f"])
-    pink_edges = LinearSegmentedColormap.from_list("pink_edges", ["#ff99cc", "#ff4da6", "#cc0077"])
+    pink_nodes = LinearSegmentedColormap.from_list("pink_nodes", ["#ffd6ea", "#ff7ac8", "#c21885"])
+    pink_edges = LinearSegmentedColormap.from_list("pink_edges", ["#ffcce6", "#ff66b3", "#99004d"])
 
     layer_sizes = []
     for i in range(0, len(nn), 2):
@@ -37,59 +38,53 @@ def draw_nn(nn):
 
     for i, layer_size in enumerate(layer_sizes):
         layer_top = v_spacing * (layer_size - 1) / 2
-        node_scale = np.interp(layer_size, [1, vmax], [0.8, 1.2])
-        radius = (v_spacing / 3) * node_scale
         node_color = pink_nodes(i / max(1, len(layer_sizes) - 1))
+        radius = (v_spacing / 3)
         for j in range(layer_size):
             circle = plt.Circle(
                 (i * h_spacing, layer_top - j * v_spacing),
                 radius,
                 facecolor=node_color,
-                edgecolor="white",
-                linewidth=1.0,
+                edgecolor="#660033",
+                linewidth=1.1,
                 zorder=4,
-                path_effects=[pe.withStroke(linewidth=6, foreground=(0, 0, 0, 0.25))]
+                path_effects=[pe.withStroke(linewidth=4, foreground=(1,1,1,0.7))]
             )
             ax.add_artist(circle)
 
     for i, (layer_size_a, layer_size_b) in enumerate(zip(layer_sizes[:-1], layer_sizes[1:])):
+        W = norm_w(weights[i] if i < len(weights) else None)
         layer_top_a = v_spacing * (layer_size_a - 1) / 2
         layer_top_b = v_spacing * (layer_size_b - 1) / 2
-        W = norm_w(weights[i] if i < len(weights) else None)
+
         for j in range(layer_size_a):
             for k in range(layer_size_b):
-                strength = 0.25
-                if W is not None:
-                    strength = float(W[k, j])
+                strength = (W[k, j] if W is not None else 0.2)
                 color = pink_edges(strength)
-                lw = 0.8 + 2.2 * strength
-                alpha = 0.12 + 0.35 * strength
+                lw = 0.8 + strength * 2
                 line = plt.Line2D(
-                    [i * h_spacing + (v_spacing/3)*0.5, (i + 1) * h_spacing - (v_spacing/3)*0.5],
+                    [i * h_spacing, (i + 1) * h_spacing],
                     [layer_top_a - j * v_spacing, layer_top_b - k * v_spacing],
-                    c=color, lw=lw, alpha=alpha, zorder=2
+                    c=color,
+                    lw=lw,
+                    alpha=0.45 + 0.3 * strength
                 )
                 ax.add_artist(line)
 
     out_i = len(layer_sizes) - 1
     for k in range(layer_sizes[out_i]):
-        ax.text(
-            out_i * h_spacing + 0.06,
-            -v_spacing * (k - (layer_sizes[out_i] - 1) / 2),
-            f"y{k + 1}",
-            ha="left", va="center", fontsize=11, color="#ffb3d9"
-        )
+        ax.text(out_i * h_spacing + 0.08,
+                -v_spacing * (k - (layer_sizes[out_i] - 1) / 2),
+                f"y{k+1}", ha="left", va="center",
+                fontsize=11, color="#cc0066", fontweight="bold")
 
     in_i = 0
     for k in range(layer_sizes[in_i]):
-        ax.text(
-            in_i * h_spacing - 0.06,
-            -v_spacing * (k - (layer_sizes[in_i] - 1) / 2),
-            f"x{k + 1}",
-            ha="right", va="center", fontsize=11, color="#ffb3d9"
-        )
+        ax.text(in_i * h_spacing - 0.08,
+                -v_spacing * (k - (layer_sizes[in_i] - 1) / 2),
+                f"x{k+1}", ha="right", va="center",
+                fontsize=11, color="#cc0066", fontweight="bold")
 
     ax.set_xlim(-0.15, 1.05)
     ax.set_ylim(-0.6, 0.6)
-    plt.subplots_adjust(left=0.02, right=0.98, top=0.96, bottom=0.04)
     plt.show()
