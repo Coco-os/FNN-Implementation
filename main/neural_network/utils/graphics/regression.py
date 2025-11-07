@@ -31,7 +31,7 @@ def learning_curve(loss_during_train):
             color=dynamic_color[i]
         )
 
-    plt.title("Curva de Aprendizaje (Color Dinámico)", fontsize=14, fontweight='bold')
+    plt.title("Curva de Aprendizaje", fontsize=14, fontweight='bold')
     plt.xlabel("Épocas", fontsize=12)
     plt.ylabel("Pérdida (Loss)", fontsize=12)
     plt.grid(True, linestyle="--", alpha=0.35)
