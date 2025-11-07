@@ -2,12 +2,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-
 def dispersion_graph(y_true, y_pred):
+    y_true = np.array(y_true).reshape(-1, 1)
+    y_pred = np.array(y_pred).reshape(-1, 1)
+
     plt.figure(figsize=(8, 6))
-    plt.scatter(y_true, y_pred, s=55, edgecolors="black", linewidths=0.6, color="#E26BAF")
+    plt.scatter(
+        y_true, y_pred,
+        s=55,
+        edgecolors="black",
+        linewidths=0.6,
+        color="#E26BAF"
+    )
+
     lims = [min(y_true.min(), y_pred.min()), max(y_true.max(), y_pred.max())]
     plt.plot(lims, lims, linestyle="--", linewidth=2, color="#C96A9F")
+
     plt.xlabel("Valores Reales", fontsize=12)
     plt.ylabel("Valores Predichos", fontsize=12)
     plt.title("Dispersión Real vs Predicción", fontsize=14, fontweight="bold")
