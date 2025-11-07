@@ -18,22 +18,17 @@ def learning_curve(loss_during_train):
     epochs = np.arange(len(loss_during_train))
     n = len(epochs)
 
-    colors = np.linspace(0.5, 1.0, n)
-    dynamic_color = [(1.0, 0.4, 0.7, c) for c in colors]
+    colors = np.linspace(0.4, 1.0, n)
+    dynamic_color = [(1.0, 0.3, 0.7, c) for c in colors]
 
     plt.figure(figsize=(8, 5))
-
     for i in range(n - 1):
-        plt.plot(
-            epochs[i:i+2],
-            loss_during_train[i:i+2],
-            linewidth=2,
-            color=dynamic_color[i]
-        )
+        plt.plot(epochs[i:i+2], loss_during_train[i:i+2], linewidth=2, color=dynamic_color[i])
 
-    plt.title("Curva de Aprendizaje", fontsize=14, fontweight='bold')
+    plt.title("Curva de Aprendizaje (Escala Logarítmica)", fontsize=14, fontweight='bold')
     plt.xlabel("Épocas", fontsize=12)
     plt.ylabel("Pérdida (Loss)", fontsize=12)
+    plt.yscale("log")
     plt.grid(True, linestyle="--", alpha=0.35)
     plt.tight_layout()
     plt.show()
