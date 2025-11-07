@@ -40,14 +40,17 @@ def learning_curve(loss_during_train):
 
 
 def residual_errors_graph(y_true, y_pred):
-    errors_train = y_true - y_pred
+    errors = y_true - y_pred
 
-    plt.figure(figsize=(10, 6))
-    plt.hist(errors_train, bins=30, alpha=0.5, label='Train Errors')
-    plt.xlabel('Prediction Error')
-    plt.ylabel('Frequency')
-    plt.title('Histogram of Prediction Errors')
-    plt.legend()
+    plt.figure(figsize=(8, 6))
+    plt.hist(errors, bins=30, color="#E26BAF", edgecolor="black", alpha=0.75)
+
+    plt.xlabel("Error de Predicción", fontsize=12)
+    plt.ylabel("Frecuencia", fontsize=12)
+    plt.title("Histograma de Errores Residuales", fontsize=14, fontweight="bold")
+
+    plt.grid(True, linestyle="--", alpha=0.35)
+    plt.tight_layout()
     plt.show()
 
 
