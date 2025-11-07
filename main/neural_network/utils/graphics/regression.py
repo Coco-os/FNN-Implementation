@@ -75,16 +75,17 @@ def plot_3d_points_and_plane_interactive(X, Y, coefficients):
     ax.set_xlabel('X1')
     ax.set_ylabel('X2')
     ax.set_zlabel('Y')
-    ax.set_title('Plano Ajustado en 3D (Estética Rosa)', fontsize=14, fontweight='bold')
+    ax.set_title('Plano Ajustado en 3D', fontsize=14, fontweight='bold')
 
     plt.show(block=True)
 
 
 def noisy_plane_points(n_points, n_dimensions, noise_level=0.3, seed=42, include_bias=True):
     rng = np.random.default_rng(seed)
+
     X = rng.uniform(0.0, 10.0, size=(n_points, n_dimensions)).astype(np.float32)
     w = rng.uniform(-1.0, 1.0, size=(n_dimensions,)).astype(np.float32)
-    b = rng.uniform(-2.0, 2.0).astype(np.float32) if include_bias else 0.0
+    b = np.float32(rng.uniform(-2.0, 2.0) if include_bias else 0.0)
 
     Y_true = X @ w + b
     noise_std = float(noise_level) * (np.std(Y_true) + 1e-8)
@@ -94,9 +95,9 @@ def noisy_plane_points(n_points, n_dimensions, noise_level=0.3, seed=42, include
         X, Y_noisy, test_size=0.2, random_state=seed, shuffle=True
     )
 
-    X_train = X_train.reshape(X_train.shape[0], n_dimensions, 1).astype(np.float32)
-    X_test  = X_test.reshape(X_test.shape[0],  n_dimensions, 1).astype(np.float32)
-    Y_train = Y_train.reshape(Y_train.shape[0], 1).astype(np.float32)
-    Y_test  = Y_test.reshape(Y_test.shape[0],  1).astype(np.float32)
+    X_train = X_train.reshape(-1, n_dimensions, 1)
+    X_test  = X_test.reshape(-1, n_dimensions, 1)
+    Y_train = Y_train.reshape(-1, 1)
+    Y_test  = Y_test.reshape(-1, 1)
 
-    return X_train, X_test, Y_train, Y_test, w.astype(np.float32), np.float32(b)
+    return X_train, X_test, Y_train, Y_test, w, b
