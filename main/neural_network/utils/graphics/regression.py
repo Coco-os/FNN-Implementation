@@ -54,7 +54,7 @@ def plot_3d_points_and_plane_interactive(X, Y, coefficients):
     x1 = X[:, 0, 0]
     x2 = X[:, 1, 0]
 
-    ax.scatter(x1, x2, Y.flatten(), c='blue', marker='o', label='Puntos de entrenamiento')
+    ax.scatter(x1, x2, Y.flatten(), c="#E26BAF", s=55, edgecolors="black")
 
     x1_range = np.linspace(x1.min(), x1.max(), 20)
     x2_range = np.linspace(x2.min(), x2.max(), 20)
@@ -62,14 +62,12 @@ def plot_3d_points_and_plane_interactive(X, Y, coefficients):
 
     z_plane = coefficients[0] * x1_grid + coefficients[1] * x2_grid + coefficients[2]
 
-    ax.plot_surface(x1_grid, x2_grid, z_plane, alpha=0.5, color='orange')
+    ax.plot_surface(x1_grid, x2_grid, z_plane, alpha=0.45, color="#F4A3D5")
 
     ax.set_xlabel('X1')
     ax.set_ylabel('X2')
     ax.set_zlabel('Y')
-    ax.set_title('Puntos de entrenamiento y plano ajustado (Interactivo)')
-
-    ax.legend()
+    ax.set_title('Plano Ajustado en 3D (Rosa)', fontsize=14, fontweight='bold')
 
     plt.show(block=True)
 
