@@ -4,13 +4,18 @@ from sklearn.model_selection import train_test_split
 
 
 def dispersion_graph(y_true, y_pred):
-    plt.figure(figsize=(10, 6))
-    plt.scatter(y_true, y_pred, alpha=0.5, label='Test')
-    plt.plot([y_true.min(), y_true.max()], [y_true.min(), y_true.max()], 'k--', lw=2)
-    plt.xlabel('True Values')
-    plt.ylabel('Predicted Values')
-    plt.title('True vs. Predicted Values')
-    plt.legend()
+    plt.figure(figsize=(8, 6))
+
+    plt.scatter(y_true, y_pred, s=55, edgecolors="black", linewidths=0.6, color="#E26BAF")
+    lims = [min(y_true.min(), y_pred.min()), max(y_true.max(), y_pred.max())]
+    plt.plot(lims, lims, linestyle="--", linewidth=2, color="#9A4A7A")
+
+    plt.xlabel("Valores Reales", fontsize=12)
+    plt.ylabel("Valores Predichos", fontsize=12)
+    plt.title("Dispersión Real vs Predicción", fontsize=14, fontweight="bold")
+
+    plt.grid(True, linestyle="--", alpha=0.35)
+    plt.tight_layout()
     plt.show()
 
 
