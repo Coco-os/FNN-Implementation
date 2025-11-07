@@ -72,20 +72,23 @@ def plot_3d_points_and_plane_interactive(X, Y, coefficients):
     plt.show(block=True)
 
 
-def noisy_plane_points(n_points, n_dimensions, noise_level):
-    np.random.seed(42)
-    X = np.random.rand(n_points, n_dimensions) * 10
-    coefficients = np.random.rand(n_dimensions)
-    Y = X.dot(coefficients)
+def noisy_plane_points(n_points, n_dimensions, noise_level=0.3, seed=42, include_bias=True):
+    rng = np.random.default_rng(seed)
+    X = rng.uniform(0.0, 10.0, size=(n_points, n_dimensions)).astype(np.float32)
+    w = rng.uniform(-1.0, 1.0, size=(n_dimensions,)).astype(np.float32)
+    b = rng.uniform(-2.0, 2.0).astype(np.float32) if include_bias else 0.0
 
-    Y_noisy = Y + noise_level * np.random.randn(n_points)
+    Y_true = X @ w + b
+    noise_std = float(noise_level) * (np.std(Y_true) + 1e-8)
+    Y_noisy = (Y_true + rng.normal(0.0, noise_std, size=n_points)).astype(np.float32)
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y_noisy, test_size=0.2, random_state=42)
+    X_train, X_test, Y_train, Y_test = train_test_split(
+        X, Y_noisy, test_size=0.2, random_state=seed, shuffle=True
+    )
 
-    X_train = np.reshape(X_train, (int(n_points*0.8), n_dimensions, 1))
-    X_test = np.reshape(X_test, (int(n_points*0.2), n_dimensions, 1))
-    Y_train = np.reshape(Y_train, (int(n_points*0.8), 1))
-    Y_test = np.reshape(Y_test, (int(n_points*0.2), 1))
+    X_train = X_train.reshape(X_train.shape[0], n_dimensions, 1).astype(np.float32)
+    X_test  = X_test.reshape(X_test.shape[0],  n_dimensions, 1).astype(np.float32)
+    Y_train = Y_train.reshape(Y_train.shape[0], 1).astype(np.float32)
+    Y_test  = Y_test.reshape(Y_test.shape[0],  1).astype(np.float32)
 
-    return X_train, X_test, Y_train, Y_test, coefficients
-
+    return X_train, X_test, Y_train, Y_test, w.astype(np.float32), np.float32(b)
